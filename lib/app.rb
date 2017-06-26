@@ -5,6 +5,9 @@ require "mongo"
 require "cloud_foundry_environment"
 require "mongodb_collection"
 
+Mongo::Logger.logger.level = Logger::DEBUG
+
+
 class ExampleApp < Sinatra::Application
   before do
     content_type "text/plain"
@@ -29,7 +32,7 @@ class ExampleApp < Sinatra::Application
     collection_name = params[:collection]
     key = params[:key]
     mongodb_collection.with_collection(collection_name) do |collection|
-      item = collection.find_one("key" => key)
+      item = collection.find({key: key}).first
       halt 404 if item.nil?
       item["value"]
     end
@@ -41,7 +44,7 @@ class ExampleApp < Sinatra::Application
     value = params[:value]
 
     mongodb_collection.with_collection(collection_name, false) do |collection|
-      collection.update({'key' => key}, {'key' => key, 'value' => value}, upsert: true)
+      collection.update_one({'key' => key}, {'key' => key, 'value' => value}, upsert: true)
     end
 
     status 201

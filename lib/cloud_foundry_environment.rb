@@ -6,7 +6,7 @@ class CloudFoundryEnvironment
   end
 
   def mongo_uri
-    services.fetch("p-mongodb").first.fetch("credentials").fetch("uri")
+    services.fetch("mongodb").first.fetch("credentials").fetch("uri")
   rescue KeyError
     raise NoMongodbBoundError
   end

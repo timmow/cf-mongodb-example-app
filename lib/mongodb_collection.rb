@@ -4,10 +4,8 @@ class MongodbCollection
   end
 
   def with_collection(collection_name, require_collection = true)
-    with_database do |database|
-      needs_collection = require_collection && !database_has_collection?(database, collection_name)
-      app.tell_user_collection_not_found if needs_collection
-      yield database.collection(collection_name)
+    with_client do |client|
+      yield client[collection_name]
     end
   end
 
@@ -19,10 +17,27 @@ class MongodbCollection
 
   def with_database
     begin
-      client = Mongo::MongoClient.from_uri(mongo_uri)
-      yield client.db
-    rescue CloudFoundryEnvironment::NoMongodbBoundError, Mongo::ConnectionFailure
+      client = Mongo::Client.new(ENV['MONGO'], {ssl_verify: false})
+      app.logger.info(ENV['MONGO'])
+      yield client.database
+    rescue CloudFoundryEnvironment::NoMongodbBoundError
       app.tell_user_how_to_bind
+    # rescue Mongo::AuthenticationError => e
+    #   app.logger.info(e)
+    ensure
+      client.close if client
+    end
+  end
+
+  def with_client
+    begin
+      client = Mongo::Client.new(ENV['MONGO'], {ssl_verify: false})
+      app.logger.info(ENV['MONGO'])
+      yield client
+    rescue CloudFoundryEnvironment::NoMongodbBoundError
+      app.tell_user_how_to_bind
+    # rescue Mongo::AuthenticationError => e
+    #   app.logger.info(e)
     ensure
       client.close if client
     end

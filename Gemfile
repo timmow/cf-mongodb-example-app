@@ -1,8 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'sinatra'
-gem 'mongo'
-gem 'bson_ext'
+gem 'mongo', "> 2.0.0"
 
 group :test do
   gem 'rspec'
